@@ -8,14 +8,17 @@ class BallDetector : public rclcpp::Node
 {
 public:
   BallDetector() : Node("ball_detector"){
+      // Creates subscriber to get image data
       subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
         "/image", 10, std::bind(&BallDetector::image_callback, this, std::placeholders::_1));
+      // Creates publisher to publish the pixel coordinates to
       publisher_ = this->create_publisher<geometry_msgs::msg::Point>("/pixel_coordinates", 10);
     }
 
 private:
   void image_callback(const sensor_msgs::msg::Image::SharedPtr msg)
   {
+    // Converts received image to openCV image
     cv_bridge::CvImagePtr cv_ptr;
     try{
       cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
@@ -25,19 +28,23 @@ private:
       return;
     }
 
+    // Converts the image into HSV colourspace
     cv::Mat hsv_image;
     cv::cvtColor(cv_ptr->image, hsv_image, cv::COLOR_BGR2HSV);
 
+    // Creates a mask of the ball based on the specified HSV values
     cv::Mat mask;
     cv::inRange(hsv_image, cv::Scalar(35, 100, 100), cv::Scalar(85,255,255), mask);
 
+    // Calculates the center of the pixel "mass"
     cv::Moments moments = cv::moments(mask, true);
     if(moments.m00 > 0){
       double cX = moments.m10 / moments.m00;
       double cY = moments.m01 / moments.m00;
 
       RCLCPP_INFO(this->get_logger(), "'Center of Gravity' located at: (%f, %f)", cX, cY);
-
+      
+      // Creates and publishes the pixel coordinate message
       auto point_msg = geometry_msgs::msg::Point();
       point_msg.x = cX;
       point_msg.y = cY;
