@@ -43,6 +43,15 @@ install(
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
+install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}
+)
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+  FILES_MATCHING PATTERN "*.py"
+)
+
 
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 

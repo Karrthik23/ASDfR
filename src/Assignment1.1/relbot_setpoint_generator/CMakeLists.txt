@@ -9,14 +9,19 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
-
+find_package(geometry_msgs REQUIRED)
 add_executable(setpoint_generator src/setpoint_generator.cpp)
 
-ament_target_dependencies(setpoint_generator rclcpp std_msgs)
+ament_target_dependencies(setpoint_generator rclcpp geometry_msgs std_msgs)
 
 install(TARGETS
   setpoint_generator
   DESTINATION lib/${PROJECT_NAME})
+
+
+find_package(example_interfaces REQUIRED)
+
+ament_target_dependencies(setpoint_generator rclcpp example_interfaces)
 
 
 if(BUILD_TESTING)

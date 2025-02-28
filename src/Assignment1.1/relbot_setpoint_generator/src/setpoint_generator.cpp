@@ -1,10 +1,11 @@
 #include "rclcpp/rclcpp.hpp"
 #include "example_interfaces/msg/float64.hpp" 
 #include <geometry_msgs/msg/point.hpp>
+#include <random>
 
 class SequenceController : public rclcpp::Node {
 public:
-  SequenceController() : Node("sequence_controller"), step_(0), tracking_mode_(true) {  // Default to tracking mode
+  SequenceController() : Node("sequence_controller"), tracking_mode_(true), generator_(std::random_device{}()), distribution_(-2.5, 2.5) {
     // Motor velocity publishers
     pub_left_ = this->create_publisher<example_interfaces::msg::Float64>("/input/left_motor/setpoint_vel", 10);
     pub_right_ = this->create_publisher<example_interfaces::msg::Float64>("/input/right_motor/setpoint_vel", 10);
@@ -14,7 +15,7 @@ public:
         "/pixel_coordinates", 10,
         std::bind(&SequenceController::position_callback, this, std::placeholders::_1));
 
-    // Timer for manual sequence execution
+    // Timer for manual mode random trajectory generation
     timer_ = this->create_wall_timer(std::chrono::seconds(3),
         std::bind(&SequenceController::run_sequence, this));
 
@@ -25,36 +26,28 @@ public:
   }
 
 private:
-  int step_;
-  bool tracking_mode_;  // Mode switch
-
-  std::vector<std::pair<double, double>> sequence_ = {
-      {0.5, 0.0},  // Move forward
-      {0.0, 0.5},  // Turn left
-      {-0.5, 0.0}, // Move backward
-      {0.0, -0.5}, // Turn right
-      {0.0, 0.0}   // Stop
-  };
+  bool tracking_mode_;
+  std::mt19937 generator_;
+  std::uniform_real_distribution<double> distribution_;
 
   void position_callback(const geometry_msgs::msg::Point::SharedPtr msg) {
-    this->get_parameter("tracking_mode", tracking_mode_); // Check if tracking mode is enabled
+    this->get_parameter("tracking_mode", tracking_mode_);
 
     if (!tracking_mode_) return;  
 
-    double image_center_x = 320.0;  // Assuming 640x480 image, center at x=320
+    double image_center_x = 320.0;  
     double object_x = msg->x;
 
     auto left_motor = example_interfaces::msg::Float64();
     auto right_motor = example_interfaces::msg::Float64();
 
-    // Adjust motor speeds based on object position
-    if (object_x < image_center_x - 50) {  // Object is to the left
+    if (object_x < image_center_x - 50) {  
       left_motor.data = 0.2;
       right_motor.data = 0.5;
-    } else if (object_x > image_center_x + 50) {  // Object is to the right
+    } else if (object_x > image_center_x + 50) {  
       left_motor.data = 0.5;
       right_motor.data = 0.2;
-    } else {  // Object is centered
+    } else {  
       left_motor.data = 0.5;
       right_motor.data = 0.5;
     }
@@ -68,20 +61,17 @@ private:
 
     if (tracking_mode_) return;  
 
-    // Execute next step in manual sequence
-    auto [linear, angular] = sequence_[step_];
-    step_ = (step_ + 1) % sequence_.size();
-
+    // Generate random values for left and right motor speeds
     auto left_motor = example_interfaces::msg::Float64();
     auto right_motor = example_interfaces::msg::Float64();
 
-    left_motor.data = linear - angular;
-    right_motor.data = linear + angular;
+    left_motor.data = distribution_(generator_);
+    right_motor.data = distribution_(generator_);
 
     pub_left_->publish(left_motor);
     pub_right_->publish(right_motor);
 
-    RCLCPP_INFO(this->get_logger(), "Manual Mode: Step %d - Left: %f, Right: %f", step_, left_motor.data, right_motor.data);
+    RCLCPP_INFO(this->get_logger(), "Manual Mode: Random Trajectory - Left: %f, Right: %f", left_motor.data, right_motor.data);
   }
 
   rclcpp::Publisher<example_interfaces::msg::Float64>::SharedPtr pub_left_;
@@ -96,4 +86,3 @@ int main(int argc, char *argv[]) {
   rclcpp::shutdown();
   return 0;
 }
-

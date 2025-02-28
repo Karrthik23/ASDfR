@@ -44,9 +44,7 @@ private:
       point_msg.z = 0.0;
       publisher_->publish(point_msg);
     }
-    else{
-      RCLCPP_WARN(this->get_logger(), "No object of the specified colour was detected");
-    }
+    
   }
 
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
