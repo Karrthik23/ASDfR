@@ -9,7 +9,6 @@ class ImageBrightnessCalculator : public rclcpp::Node
 public:
     ImageBrightnessCalculator() : Node("image_brightness_calculator")
     {
-	// Declares threshold ROS parameter and initalizes with default value
 	this->declare_parameter<double>("brightness_threshold", 97.0);
         subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
             "/image", 10, std::bind(&ImageBrightnessCalculator::image_callback, this, std::placeholders::_1));
@@ -39,7 +38,7 @@ private:
         RCLCPP_INFO(this->get_logger(), "Image brightness: %f", brightness);
 
 	// Reads parameter value and writes to threshold variable
-	double threshold = 0;
+	double threshold;
 	this->get_parameter("brightness_threshold", threshold);
 
 	// Initializes the datatype and publisher
@@ -48,7 +47,6 @@ private:
         brightness_status.data = brightness > threshold; // Threshold for the mean brightness value
         publisher_->publish(brightness_status);
     }
-
 
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr publisher_;
