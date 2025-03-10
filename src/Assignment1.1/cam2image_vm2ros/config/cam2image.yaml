@@ -2,7 +2,7 @@
   ros__parameters:
     width: 1080
     height: 1920
-    socket_ip: 172.20.112.1
+    socket_ip: 145.126.53.115
     socket_port: 9999
     remote_mode: true
     show_camera: true
