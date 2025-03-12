@@ -38,7 +38,7 @@ void real_time_task(void *arg) {
             next_time.tv_sec++;
             next_time.tv_nsec -= 1000000000;
         }
-        evl_usleep(PERIOD_NS / 1000); // EVL real-time sleep function
+        evl_sleep_until(PERIOD_NS / 1000); // EVL real-time sleep function
     }
 }
 
