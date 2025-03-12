@@ -84,7 +84,6 @@ void *log_task(void *arg){
         double exec_time_local = exec_time;
         pthread_mutex_unlock(&exec_time_mutex);
         
-        printf("Logging data %i\t", i);
         // Log execution time to file
         fprintf(log_file, "Iteration %d - Execution Time: %.3f ms\n", i, exec_time);
 
