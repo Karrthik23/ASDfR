@@ -1,64 +1,77 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <evl/thread.h>
-#include <evl/clock.h>
-#include <evl/timer.h>
-#include <evl/sched.h>
-#include <time.h>
-
+#include "timing_x.h"
 #define PERIOD_NS 1000000  // 1 ms (1,000,000 nanoseconds)
 #define RUN_TIME 5  // Run for 5 seconds (5000 iterations)
+#define CPU_CORE 1  // Assign real-time thread to CPU core 1
+#define BUFFER_SIZE 1000  // Buffer to store timing data
 
-void real_time_task(void *arg) {
-    struct timespec next_time, start_time, end_time;
-    clock_gettime(CLOCK_MONOTONIC, &next_time);
+typedef struct {
+    double exec_time;
+    double jitter;
+} TimingData;
 
-    printf("Real-time periodic task started.\n");
+// Shared buffer and control variables
+static TimingData timing_buffer[BUFFER_SIZE];
+static int buffer_index = 0;
+static int logging_done = 0;
+static struct evl_mutex buffer_mutex;
+static struct evl_cond buffer_cond;
 
-    for (int i = 0; i < (RUN_TIME * 1000); i++) {
-        // Record start time
-        clock_gettime(CLOCK_MONOTONIC, &start_time);
-
-        // Simulated workload
-        volatile int sum = 0;
-        for (int j = 0; j < 100000; j++) sum += j;
-
-        // Record end time
-        clock_gettime(CLOCK_MONOTONIC, &end_time);
-
-        // Compute execution time in milliseconds
-        double exec_time = (end_time.tv_sec - start_time.tv_sec) * 1e3 +
-                           (end_time.tv_nsec - start_time.tv_nsec) / 1e6;
-
-        printf("Iteration %d - Execution Time: %.3f ms\n", i, exec_time);
-
-        // Sleep until next period using EVL timer
-        next_time.tv_nsec += PERIOD_NS;
-        while (next_time.tv_nsec >= 1000000000) {
-            next_time.tv_sec++;
-            next_time.tv_nsec -= 1000000000;
-        }
-        evl_sleep_until(PERIOD_NS / 1000); // EVL real-time sleep function
-    }
-}
+// File descriptor for logging thread
+static int log_fd;
 
 int main() {
     int ret;
+    pthread_t rt_thread, log_thread;
     struct evl_sched_attrs attr;
+    cpu_set_t cpu_set;
 
-    // Set real-time scheduling attributes
-    attr.sched_policy = SCHED_FIFO;
-    attr.sched_priority = 80; // High priority
+    // Open log file
+    log_fd = open("timing_log.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (log_fd < 0) {
+        perror("Failed to open log file");
+        return -1;
+    }
 
-    // Create EVL real-time thread
-    ret = evl_attach_self("rt-thread");
-    if (ret) {
+    // Initialize EVL mutex and condition variable
+    ret = evl_new_mutex(&buffer_mutex);
+    if (ret < 0) {
+        perror("Failed to create EVL mutex");
+        return -1;
+    }
+
+    ret = evl_new_cond(&buffer_cond);
+    if (ret < 0) {
+        perror("Failed to create EVL condition variable");
+        return -1;
+    }
+
+    // Attach main process to EVL
+    ret = evl_attach_self("rt-main");
+    if (ret < 0) {
         perror("Failed to attach to Xenomai EVL");
         return -1;
     }
 
-    printf("Starting real-time task...\n");
-    real_time_task(NULL);
+    // Set CPU affinity for real-time thread
+    CPU_ZERO(&cpu_set);
+    CPU_SET(CPU_CORE, &cpu_set);
+
+    pthread_attr_t attr_thread;
+    pthread_attr_init(&attr_thread);
+    pthread_attr_setaffinity_np(&attr_thread, sizeof(cpu_set_t), &cpu_set);
+
+    printf("Starting real-time task on CPU core %d...\n", CPU_CORE);
+
+    // Create real-time and logging threads
+    pthread_create(&rt_thread, &attr_thread, real_time_task, NULL);
+    pthread_create(&log_thread, NULL, logging_task, NULL);
+
+    // Wait for both threads to finish
+    pthread_join(rt_thread, NULL);
+    pthread_join(log_thread, NULL);
+
+    // Close log file
+    close(log_fd);
 
     return 0;
 }
