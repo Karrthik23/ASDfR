@@ -122,4 +122,3 @@ int main() {
 
     return 0;
 }
-//Create new thread, which logs the variables
