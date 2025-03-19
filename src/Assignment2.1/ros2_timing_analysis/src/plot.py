@@ -4,9 +4,10 @@ import pandas as pd
 import os
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+filename = "timing_log_with_load_linux_stress.csv"
 
 # Read the CSV file into a DataFrame
-df = pd.read_csv("/timing_logs/timing_log.csv").to_numpy()
+df = pd.read_csv("timing_logs/"+filename).to_numpy()
 
 # Extract timing data from the DataFrame
 timing = []
@@ -26,6 +27,6 @@ plt.ylabel('Execution Time (ms)')
 plt.title('Execution Time per Iteration')
 
 # Save the plot to a file
-plt.savefig('execution_time_plot.png')
+plt.savefig('timing_logs/'+ filename + '.png')
 
-print("Plot saved as execution_time_plot.png")
+print("Plot saved as " + filename + ".png")
