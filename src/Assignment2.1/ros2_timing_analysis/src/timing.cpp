@@ -24,16 +24,16 @@ int main() {
     
 
     // Tells main to wait until both threads have been terminated
-    int ret = pthread_join(log_thread, NULL);
-    if (ret != 0) {
-        std::cerr << "Error: log_thread join failed (" << strerror(ret) << ")\n";
+    int ret_log = pthread_join(log_thread, NULL);
+    if (ret_log != 0) {
+        std::cerr << "Error: log_thread join failed (" << strerror(ret_log) << ")\n";
         return EXIT_FAILURE;
     }
 
     
-    int ret = pthread_join(thread, NULL);
-    if (ret != 0) {
-        std::cerr << "Error: timing_thread join failed (" << strerror(ret) << ")\n";
+    int ret_time = pthread_join(thread, NULL);
+    if (ret_time != 0) {
+        std::cerr << "Error: timing_thread join failed (" << strerror(ret_time) << ")\n";
         return EXIT_FAILURE;
     }
     // Destroy the mutex
