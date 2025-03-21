@@ -12,51 +12,50 @@
 #include <sched.h>
 #include <pthread.h>
 
-#define PERIOD_NS 1000000  // 1 ms (1,000,000 nanoseconds)
-#define RUN_TIME 5         // Run for 5 seconds (5000 iterations)
-#define CPU_CORE 1         // Assign thread to CPU core 1
+#define PERIOD_NS 1000000    // 1 ms (1,000,000 nanoseconds)
+#define RUN_TIME 5       // run time = 5s
+#define CPU_CORE 1       // thread pinned to core 1
 #define FILE_NAME "ss_timing_log_with_load_evl_bash.csv"
-static struct evl_mutex rt_mutex;
+static struct evl_mutex rt_mutex; // Creating a struct for mutex
 
-// Array to store execution time log
+// buffer to hold exec time logs
 static double exec_times[RUN_TIME * 1000];
 
 void *real_time_task(void *arg) {
-    struct timespec next_time, start_time, end_time;
+    struct timespec next_time, start_time, end_time; //for recoding timing 
 
-    // Get current time for the periodic loop
-    clock_gettime(CLOCK_MONOTONIC, &next_time);
+    clock_gettime(CLOCK_MONOTONIC, &next_time);  // grab current time
 
-    // Attach as a real-time thread
+    // attach thread to evl
     if (evl_attach_thread(EVL_CLONE_PRIVATE, "rt-task") < 0) {
         perror("Failed to attach real-time thread");
         return NULL;
     }
 
     printf("Real-time periodic task started on CPU core %d\n", CPU_CORE);
+    //printing to know when the loop starts
 
     for (int i = 0; i < (RUN_TIME * 1000); i++) {
-        // Record start time
-        clock_gettime(CLOCK_MONOTONIC, &start_time);
+        clock_gettime(CLOCK_MONOTONIC, &start_time);   // start timestamp
 
-        // Simulated workload
+        // some cpu load (dummy loop)
         volatile int product = 0;
         for (int j = 0; j < 100000; j++) product += j*j;
 
-        // Record end time
-        clock_gettime(CLOCK_MONOTONIC, &end_time);
+        clock_gettime(CLOCK_MONOTONIC, &end_time);     // end timestamp
 
-        // Compute execution time in milliseconds
+        // calc duration in ms
         exec_times[i] = (end_time.tv_sec - start_time.tv_sec) * 1e3 +
                         (end_time.tv_nsec - start_time.tv_nsec) / 1e6;
 
-        // Sleep until the next period using EVL real-time timer
+        // add period to next_time
         next_time.tv_nsec += PERIOD_NS;
         while (next_time.tv_nsec >= 1000000000) {
             next_time.tv_sec++;
             next_time.tv_nsec -= 1000000000;
         }
-        evl_usleep(PERIOD_NS / 1000); // EVL real-time sleep function
+
+        evl_usleep(PERIOD_NS / 1000);   // sleep 1ms using evl
     }
 
     return NULL;
@@ -68,48 +67,48 @@ int main() {
     struct evl_sched_attrs attr;
     cpu_set_t cpu_set;
 
-    // Set real-time scheduling attributes
+    // set scheduler config
     attr.sched_policy = SCHED_FIFO;
-    attr.sched_priority = 80; // High priority
+    attr.sched_priority = 80;    // fairly high prio
 
-    // Attach main process to EVL
+    // try attaching main thread to evl
     ret = evl_attach_self("rt-main");
     if (ret < 0) {
-        perror("Failed to attach to Xenomai EVL");
+        perror("failed to attach to xenomai evl");
         return -1;
     }
 
-    // Set CPU affinity to force thread to run on a single core
+    // limit to specific cpu core
     CPU_ZERO(&cpu_set);
     CPU_SET(CPU_CORE, &cpu_set);
 
-    pthread_attr_t attr_thread;
-    pthread_attr_init(&attr_thread);
-    pthread_attr_setaffinity_np(&attr_thread, sizeof(cpu_set_t), &cpu_set);
+    pthread_attr_t attr_thread;                      //thread attr object
+    pthread_attr_init(&attr_thread);                //init with default values
+    pthread_attr_setaffinity_np(&attr_thread, sizeof(cpu_set_t), &cpu_set);   // Set CPU  affinity
+    
 
-    printf("Starting real-time task on CPU core %d...\n", CPU_CORE);
+    printf("Starting real-time task on CPU core %d...\n", CPU_CORE);  // notify
 
-    // Create and start real-time thread
+    // real time tthread
     pthread_create(&rt_thread, &attr_thread, real_time_task, NULL);
-    pthread_join(rt_thread, NULL);
+    pthread_join(rt_thread, NULL);    // wait for it to end
 
-    // Open log file after execution completes
+    //open output file
     int log_fd = open(FILE_NAME, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (log_fd < 0) {
-        perror("Failed to open log file");
+        perror("couldn't open log file");
         return -1;
     }
 
-    // Write execution times to the log file
+    //log all data to csv
     char log_buffer[256];
     for (int i = 0; i < (RUN_TIME * 1000); i++) {
         snprintf(log_buffer, sizeof(log_buffer), "Iteration %d - Execution Time: %.3f ms\n", i, exec_times[i]);
-        write(log_fd, log_buffer, strlen(log_buffer));
+        write(log_fd, log_buffer, strlen(log_buffer));  // write line
     }
 
-    // Close log file
+    //Close file
     close(log_fd);
 
     return 0;
 }
-

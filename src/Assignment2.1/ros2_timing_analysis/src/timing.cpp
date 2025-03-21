@@ -1,14 +1,7 @@
 #include "timing.h"
-<<<<<<< HEAD
-
-
-
-
-=======
 #include <cerrno>
 #include <cstring>
 #include <iostream>
->>>>>>> origin/GeezusSchwifty
 
 int main() {
     // Initialize the mutex 
