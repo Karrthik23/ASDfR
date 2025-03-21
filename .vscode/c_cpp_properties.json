@@ -1,0 +1,25 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/nothecats/Documents/project/ros2/nav/install/turtlebot3_fake_node/include/**",
+        "/home/nothecats/Documents/project/ros2/nav/install/turtlebot3_msgs/include/**",
+        "/home/nothecats/Documents/project/ros2/nav/install/turtlebot3_gazebo/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/nothecats/Documents/project/ASDfR/src/Assignment1.2/relbot_simulator/include/**",
+        "/usr/include/**",
+        "/home/nothecats/Documents/project/ASDfR/src/Assignment2.1/ros2_timing_analysis/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
