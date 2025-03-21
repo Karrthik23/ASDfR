@@ -8,7 +8,7 @@
                 "/usr/local/include"
             ],
             "defines": [
-                "_GNU_SOURCE"  // Ensures GNU extensions are recognized
+                "_GNU_SOURCE" 
             ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c17",
