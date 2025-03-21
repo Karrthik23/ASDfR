@@ -21,46 +21,46 @@ static struct evl_mutex rt_mutex;
 // Array to store execution time log
 static double exec_times[RUN_TIME * 1000];
 
-void *real_time_task(void *arg) {
-    struct timespec next_time, start_time, end_time;
+    void *real_time_task(void *arg) {
+        struct timespec next_time, start_time, end_time;
 
-    // Get current time for the periodic loop
-    clock_gettime(CLOCK_MONOTONIC, &next_time);
+        // Get current time for the periodic loop
+        clock_gettime(CLOCK_MONOTONIC, &next_time);
 
-    // Attach as a real-time thread
-    if (evl_attach_thread(EVL_CLONE_PRIVATE, "rt-task") < 0) {
-        perror("Failed to attach real-time thread");
+        // Attach as a real-time thread
+        if (evl_attach_thread(EVL_CLONE_PRIVATE, "rt-task") < 0) {
+            perror("Failed to attach real-time thread");
+            return NULL;
+        }
+
+        printf("Real-time periodic task started on CPU core %d\n", CPU_CORE);
+
+        for (int i = 0; i < (RUN_TIME * 1000); i++) {
+            // Record start time
+            clock_gettime(CLOCK_MONOTONIC, &start_time);
+
+            // Simulated workload
+            volatile int sum = 0;
+            for (int j = 0; j < 100000; j++) sum += j;
+
+            // Record end time
+            clock_gettime(CLOCK_MONOTONIC, &end_time);
+
+            // Compute execution time in milliseconds
+            exec_times[i] = (end_time.tv_sec - start_time.tv_sec) * 1e3 +
+                            (end_time.tv_nsec - start_time.tv_nsec) / 1e6;
+
+            // Sleep until the next period using EVL real-time timer
+            next_time.tv_nsec += PERIOD_NS;
+            while (next_time.tv_nsec >= 1000000000) {
+                next_time.tv_sec++;
+                next_time.tv_nsec -= 1000000000;
+            }
+            evl_usleep(PERIOD_NS / 1000); // EVL real-time sleep function
+        }
+
         return NULL;
     }
-
-    printf("Real-time periodic task started on CPU core %d\n", CPU_CORE);
-
-    for (int i = 0; i < (RUN_TIME * 1000); i++) {
-        // Record start time
-        clock_gettime(CLOCK_MONOTONIC, &start_time);
-
-        // Simulated workload
-        volatile int sum = 0;
-        for (int j = 0; j < 100000; j++) sum += j;
-
-        // Record end time
-        clock_gettime(CLOCK_MONOTONIC, &end_time);
-
-        // Compute execution time in milliseconds
-        exec_times[i] = (end_time.tv_sec - start_time.tv_sec) * 1e3 +
-                        (end_time.tv_nsec - start_time.tv_nsec) / 1e6;
-
-        // Sleep until the next period using EVL real-time timer
-        next_time.tv_nsec += PERIOD_NS;
-        while (next_time.tv_nsec >= 1000000000) {
-            next_time.tv_sec++;
-            next_time.tv_nsec -= 1000000000;
-        }
-        evl_usleep(PERIOD_NS / 1000); // EVL real-time sleep function
-    }
-
-    return NULL;
-}
 
 int main() {
     int ret;
