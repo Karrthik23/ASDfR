@@ -6,14 +6,20 @@
 
 #define PERIOD_NS 1000000  // 1 ms (1,000,000 nanoseconds)
 #define RUN_TIME 5  // Run for 5 seconds
+#define S_TO_MILLIS 1000 // conversion factor for loop
 pthread_mutex_t exec_time_mutex;
 double exec_time = 0;
+
+// Thread start routine used in timing thread
 void* loop_time_measurement_function(void *arg) {
+    // Structure used for clock_gettime
+    // Includes seconds and nanoseconds
     struct timespec next_time;
     clock_gettime(CLOCK_MONOTONIC, &next_time);  // Get current time
 
-    for (int i = 0; i < (RUN_TIME * 1000); i++) {
-        // Record start time
+    // Loops based on specified run time
+    for (int i = 0; i < (RUN_TIME * S_TO_MILLIS); i++) {
+        // Record start time using timespec structure
         struct timespec start_time, end_time;
         clock_gettime(CLOCK_MONOTONIC, &start_time);
 
@@ -46,8 +52,10 @@ void* loop_time_measurement_function(void *arg) {
     return NULL;
 }
 
-// 
+// Thread start routine used in logger thread
 void* logger_thread(void *arg){
+    // Structure used for clock_gettime
+    // Includes seconds and nanoseconds
     struct timespec next_time;
     clock_gettime(CLOCK_MONOTONIC, &next_time);  // Get current time
 
@@ -62,6 +70,7 @@ void* logger_thread(void *arg){
 
     // Open the log file to append measured data
     log_file = fopen("timing_log.csv", "a");
+    // Throw an exception if file cant be opened to append to
     if (log_file == NULL) {
         perror("Failed to open log file to append data to");
         return NULL;
@@ -75,8 +84,9 @@ void* logger_thread(void *arg){
     }
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next_time, NULL);
 
-    for (int i = 0; i < (RUN_TIME * 1000); i++) {
-        // Record start time
+     // Loops based on specified run time
+    for (int i = 0; i < (RUN_TIME * S_TO_MILLIS); i++) {
+        // Record start time using timespec datatype
         struct timespec start_time, end_time;
         clock_gettime(CLOCK_MONOTONIC, &start_time);
 
@@ -97,7 +107,7 @@ void* logger_thread(void *arg){
         clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next_time, NULL);
     }
 
-    // Close the log file
+    // Close the log file after operation
     fclose(log_file);
     return NULL;
 }

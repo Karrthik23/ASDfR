@@ -23,7 +23,7 @@ int main() {
     }
     
 
-    // Tells main to wait until both threads have been terminated
+    // Tries to join the thread used for logging
     int ret_log = pthread_join(log_thread, NULL);
     if (ret_log != 0) {
         std::cerr << "Error: log_thread join failed (" << strerror(ret_log) << ")\n";
@@ -31,6 +31,7 @@ int main() {
     }
 
     
+    // Tries to join the thread for timing
     int ret_time = pthread_join(thread, NULL);
     if (ret_time != 0) {
         std::cerr << "Error: timing_thread join failed (" << strerror(ret_time) << ")\n";
