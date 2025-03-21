@@ -18,8 +18,8 @@ void *periodic_task(void *arg) {
         clock_gettime(CLOCK_MONOTONIC, &start_time);
 
         // Perform some computation (simulated workload)
-        volatile int sum = 0;
-        for (int j = 0; j < 100000; j++) sum += j*j;
+        volatile int product = 0;
+        for (int j = 0; j < 100000; j++) product += j*j;
 
         // Record end time
         clock_gettime(CLOCK_MONOTONIC, &end_time);
