@@ -6,6 +6,7 @@
 
 #define PERIOD_NS 1000000  // 1 ms (1,000,000 nanoseconds)
 #define RUN_TIME 5  // Run for 5 seconds
+<<<<<<< HEAD
 pthread_mutex_t exec_time_mutex;
 double exec_time = 0;
 void *periodic_task(void *arg) {
@@ -14,12 +15,33 @@ void *periodic_task(void *arg) {
 
     for (int i = 0; i < (RUN_TIME * 1000); i++) {
         // Record start time
+=======
+#define S_TO_MILLIS 1000 // conversion factor for loop
+pthread_mutex_t exec_time_mutex;
+double exec_time = 0;
+
+// Thread start routine used in timing thread
+void* loop_time_measurement_function(void *arg) {
+    // Structure used for clock_gettime
+    // Includes seconds and nanoseconds
+    struct timespec next_time;
+    clock_gettime(CLOCK_MONOTONIC, &next_time);  // Get current time
+
+    // Loops based on specified run time
+    for (int i = 0; i < (RUN_TIME * S_TO_MILLIS); i++) {
+        // Record start time using timespec structure
+>>>>>>> origin/GeezusSchwifty
         struct timespec start_time, end_time;
         clock_gettime(CLOCK_MONOTONIC, &start_time);
 
         // Perform some computation (simulated workload)
+<<<<<<< HEAD
         volatile int product = 0;
         for (int j = 0; j < 100000; j++) product += j*j;
+=======
+        volatile int sum = 0;
+        for (int j = 0; j < 100000; j++) sum += j*j;
+>>>>>>> origin/GeezusSchwifty
 
         // Record end time
         clock_gettime(CLOCK_MONOTONIC, &end_time);
@@ -46,6 +68,7 @@ void *periodic_task(void *arg) {
     return NULL;
 }
 
+<<<<<<< HEAD
 
 void *log_task(void *arg){
     struct timespec next_time;
@@ -53,6 +76,18 @@ void *log_task(void *arg){
 
     // Create new file
     FILE *log_file = fopen("timing_log.csv", "w");
+=======
+// Thread start routine used in logger thread
+void* logger_thread(void *arg){
+    // Structure used for clock_gettime
+    // Includes seconds and nanoseconds
+    struct timespec next_time;
+    clock_gettime(CLOCK_MONOTONIC, &next_time);  // Get current time
+
+    // Create new file with specified name
+    FILE *log_file = fopen("timing_log.csv", "w");
+    // Throw an exception if file cant be created
+>>>>>>> origin/GeezusSchwifty
     if (log_file == NULL) {
         perror("Failed to create log file");
         return NULL;
@@ -61,6 +96,10 @@ void *log_task(void *arg){
 
     // Open the log file to append measured data
     log_file = fopen("timing_log.csv", "a");
+<<<<<<< HEAD
+=======
+    // Throw an exception if file cant be opened to append to
+>>>>>>> origin/GeezusSchwifty
     if (log_file == NULL) {
         perror("Failed to open log file to append data to");
         return NULL;
@@ -74,8 +113,14 @@ void *log_task(void *arg){
     }
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next_time, NULL);
 
+<<<<<<< HEAD
     for (int i = 0; i < (RUN_TIME * 1000); i++) {
         // Record start time
+=======
+     // Loops based on specified run time
+    for (int i = 0; i < (RUN_TIME * S_TO_MILLIS); i++) {
+        // Record start time using timespec datatype
+>>>>>>> origin/GeezusSchwifty
         struct timespec start_time, end_time;
         clock_gettime(CLOCK_MONOTONIC, &start_time);
 
@@ -96,7 +141,11 @@ void *log_task(void *arg){
         clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next_time, NULL);
     }
 
+<<<<<<< HEAD
     // Close the log file
+=======
+    // Close the log file after operation
+>>>>>>> origin/GeezusSchwifty
     fclose(log_file);
     return NULL;
 }
