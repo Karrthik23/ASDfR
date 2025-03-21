@@ -40,8 +40,8 @@ for filename in filenames:
     plt.ylabel('Execution Time (ms)')
     plt.title('Execution Time per Iteration')
     # Save the plot to a file
-    plt.savefig('timing_logs/'+ filename + '.png')
-    print('Plot saved as ' + filename + '.png')
+    plt.savefig('timing_logs/'+ filename + '.pdf')
+    print('Plot saved as ' + filename + '.pdf')
     plt.clf()
 
     # Plot the jitter data as data points without connecting them
@@ -52,9 +52,9 @@ for filename in filenames:
     plt.title('Jitter per Iteration')
     plt.legend()
     # Save the plot to a file
-    plt.savefig('timing_logs/jitter_'+ filename + '.png')
+    plt.savefig('timing_logs/jitter_'+ filename + '.pdf')
     
-    print('Jitter plot saved as ' + filename + '.png')
+    print('Jitter plot saved as ' + filename + '.pdf')
     plt.clf()
     
     print('Average jitter for ' + filename + '= ' + str(mean_jitter))
