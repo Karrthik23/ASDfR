@@ -2,7 +2,7 @@
 #include <string>
 
 #include <geometry_msgs/msg/point.hpp>
-#include <geometry_msgs/msg/point_stamped.hpp>
+#include <geometry_msgs/msg/point_stmped.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
