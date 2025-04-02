@@ -4,7 +4,7 @@
     height: 200
     socket_ip: 172.24.192.1
     socket_port: 9999
-    remote_mode: true
+    remote_mode: false
     show_camera: true
     remote_timeout: 7
     history: "keep_last"
