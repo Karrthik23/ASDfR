@@ -6,8 +6,8 @@ def generate_launch_description():
     return LaunchDescription(
         [
             Node(
-                package="RELbot_simulator",
-                executable="RELbot_simulator",
+                package="relbot_simulator",
+                executable="relbot_simulator",
                 arguments=["--ros-args", "--log-level", "WARN"],
             ),
             Node(

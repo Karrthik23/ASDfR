@@ -11,4 +11,4 @@
     durability: "volatile"
     reliability: "reliable"
     depth: 10
-    rotate: false
+    rotate: true
