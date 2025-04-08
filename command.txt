@@ -1,0 +1,5 @@
+sudo relbot-motortest
+we have 2 templates base and 20-sim
+base is better structured and read the code and make custom ros2 package
+test it with xenomai part for unit tests
+send across motor values for onw
