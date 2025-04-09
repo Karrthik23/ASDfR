@@ -52,9 +52,17 @@ class SequenceController : public rclcpp::Node {
 
         auto vel_xeno = xrf2_msgs::msg::Ros2Xeno();
 
+        vel_xeno.left_motor_setpoint_vel = -2047*0.15;
+        vel_xeno.right_motor_setpoint_vel = 2047*0.15;
         
-        vel_xeno.left_motor_setpoint_vel = 2047* 0.25;
-        vel_xeno.right_motor_setpoint_vel = -2047 * 0.25;
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+
+        vel_xeno.left_motor_setpoint_vel =  -2047*0.15;
+        vel_xeno.right_motor_setpoint_vel = -2047*0.15;
+
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+
+        
 
         pub_xeno_ -> publish(vel_xeno);
     }
