@@ -1,0 +1,6 @@
+float64 current_pos_left
+float64 current_pos_right
+float64 left_motor_pwm
+float64 right_motor_pwm
+float64 difference_left
+float64 difference_right

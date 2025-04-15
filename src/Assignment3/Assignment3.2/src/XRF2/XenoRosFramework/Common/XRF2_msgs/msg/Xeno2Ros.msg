@@ -1,2 +1,2 @@
-float64 example_c
-float64 example_d
+float64 channel1
+float64 channel2

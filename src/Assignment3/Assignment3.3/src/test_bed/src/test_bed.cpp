@@ -66,20 +66,68 @@ int Test_Bed::run()
     data_to_be_logged.this_is_a_float = data_to_be_logged.this_is_a_float/2;
     data_to_be_logged.this_is_a_double = data_to_be_logged.this_is_a_double/4; 
 
+        
+    /* From Loop Controller
+        u[0];		 PosLeft 
+        u[1];		 PosRight 
+        u[2];		 SetVelLeft 
+        u[3];		 SetVelRight 
+        y[0]         SteerLeft 
+        y[1] 		 SteerRight 
+        channel 1 is left pos
+        channel 2 is right pos
+        pwm1 is left motor input
+        pwm2 is right motor input
+    */
+
+    // update current ticks
+    position.current_tick_left = sample_data.channel1;
+    position.current_tick_right = sample_data.channel2;
+
+    // Calculate angle difference
+    position.difference_left = position.current_tick_left-position.previous_tick_left;
+    position.difference_right = position.current_tick_right-position.previous_tick_right;    
+    //account for overflow
+    if (position.difference_left > max_encoder_ticks/2)
+    {
+        position.difference_left -= (max_encoder_ticks+1);
+    }
+    else if(position.difference_left < -max_encoder_ticks/2)
+    {
+        position.difference_left += (max_encoder_ticks+1);
+    }
+
+    
+    if (position.difference_right > max_encoder_ticks/2)
+    {
+        position.difference_right -= (max_encoder_ticks+1);
+    }
+    else if(position.difference_right < -max_encoder_ticks/2)
+    {
+        position.difference_right += (max_encoder_ticks+1);
+    }
+    // update previous ticks
+    position.previous_tick_left = position.current_tick_left;
+    position.previous_tick_right = position.current_tick_right;
+    // Calculate displacement
+    position.current_pos_left += position.difference_left/(encoder_rev_count*gear_ratio)*(wheel_r*rad_full_rev_conv);
+    position.current_pos_right += position.difference_right/(encoder_rev_count*gear_ratio)*(wheel_r*rad_full_rev_conv);
+
+    u[0] = position.current_pos_left; // Pos left
+    u[1] = position.current_pos_right; //Pos right
+    u[2] = ros_data.left_motor_setpoint_vel; /* SetVelLeft */
+    u[3] = ros_data.right_motor_setpoint_vel; /* SetVelright */
     controller.Calculate(u, y);
-    // if(controller.IsFinished())
-        // return 1;
-    // Set motor outputs to 25% of max
-    // sample_data.channel1
-    
-    
-    xeno_data.channel1 = sample_data.channel1;
-    xeno_data.channel2 = sample_data.channel2;
-    actuate_data.pwm1 = ros_data.left_motor_setpoint_vel;
-    actuate_data.pwm2 = ros_data.right_motor_setpoint_vel;
-    
-    monitor.printf("Right motor value : %f\n",ros_data.right_motor_setpoint_vel);
-    monitor.printf("Right motor value : %f\n",ros_data.left_motor_setpoint_vel);
+    xeno_data.current_pos_left  = position.current_pos_left;
+    xeno_data.current_pos_right = position.current_pos_right;
+    xeno_data.difference_left   = position.difference_left;
+    xeno_data.difference_right  = position.difference_right;
+    xeno_data.left_motor_pwm    = ros_data.left_motor_setpoint_vel;
+    xeno_data.right_motor_pwm   = ros_data.right_motor_setpoint_vel;
+    actuate_data.pwm1 =  ros_data.left_motor_setpoint_vel;          // left motor y[0]-->/* Steer Left */
+    actuate_data.pwm2 =  ros_data.right_motor_setpoint_vel;          // right motor y[1]-->/* Steer right */
+    monitor.printf("Right set_vel value : %f\n",ros_data.right_motor_setpoint_vel);
+    monitor.printf("Left set_vel value : %f\n",ros_data.left_motor_setpoint_vel);
 
     return 0;
 }
