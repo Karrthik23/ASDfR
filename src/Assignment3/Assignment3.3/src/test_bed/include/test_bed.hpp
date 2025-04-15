@@ -15,16 +15,11 @@ struct ThisIsAStruct
     bool this_is_a_bool = false;
 };
 
-struct Pos
+struct position
 {
-    double current_pos_left = 0;
-    double current_pos_right = 0;
-    double previous_tick_left = 0;
-    double previous_tick_right = 0;
-    double current_tick_left = 0;
-    double current_tick_right = 0;
-    double difference_left = 0;
-    double difference_right = 0; 
+    double current_pos = 0;
+    double previous_pos = 0;
+    double diff = 0; 
 };
 #pragma pack(0)
 
@@ -37,7 +32,9 @@ private:
     XenoFileHandler file;
     struct ThisIsAStruct data_to_be_logged;
     LoopController controller;
-    struct Pos position;
+
+    struct position pos_right;
+    struct position pos_left;
     double u[4];
     double y[2];
     float gear_ratio = 15.58;

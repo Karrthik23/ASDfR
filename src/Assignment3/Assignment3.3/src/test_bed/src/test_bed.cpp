@@ -79,49 +79,39 @@ int Test_Bed::run()
         pwm1 is left motor input
         pwm2 is right motor input
     */
-
-    // update current ticks
-    position.current_tick_left = sample_data.channel1;
-    position.current_tick_right = sample_data.channel2;
-
-    // Calculate angle difference
-    position.difference_left = position.current_tick_left-position.previous_tick_left;
-    position.difference_right = position.current_tick_right-position.previous_tick_right;    
-    //account for overflow
-    if (position.difference_left > max_encoder_ticks/2)
-    {
-        position.difference_left -= (max_encoder_ticks+1);
+   
+    pos_left.diff = sample_data.channel1 - pos_left.previous_pos
+   //account for overflow
+    if (pos_left.diff > max_encoder_ticks/2){
+        pos_left.diff -= (max_encoder_ticks+1);
     }
-    else if(position.difference_left < -max_encoder_ticks/2)
-    {
-        position.difference_left += (max_encoder_ticks+1);
+    else if(pos_left.diff < -max_encoder_ticks/2){
+        pos_left.diff += (max_encoder_ticks+1);
     }
-
-    
-    if (position.difference_right > max_encoder_ticks/2)
-    {
-        position.difference_right -= (max_encoder_ticks+1);
+    pos_left.previous_pos = sample_data.channel1;
+    pos_right.diff = -(sample_data.channel2 - pos_right.previous_pos)
+    if (pos_right.diff > max_encoder_ticks/2)    {
+        pos_right.difft -= (max_encoder_ticks+1);
     }
-    else if(position.difference_right < -max_encoder_ticks/2)
-    {
-        position.difference_right += (max_encoder_ticks+1);
+    else if(pos_right.diff < -max_encoder_ticks/2)    {
+        pos_right.diff += (max_encoder_ticks+1);
     }
+    pos_right.previous_pos = sample_data.channel1;
     // update previous ticks
-    position.previous_tick_left = position.current_tick_left;
-    position.previous_tick_right = position.current_tick_right;
+    
     // Calculate displacement
-    position.current_pos_left += position.difference_left/(encoder_rev_count*gear_ratio)*(wheel_r*rad_full_rev_conv);
-    position.current_pos_right += position.difference_right/(encoder_rev_count*gear_ratio)*(wheel_r*rad_full_rev_conv);
+    pos_left.current_pos += pos_left.diff/(encoder_rev_count*gear_ratio)*(wheel_r*rad_full_rev_conv);
+    pos_right.current_pos += position.difference_right/(encoder_rev_count*gear_ratio)*(wheel_r*rad_full_rev_conv);
 
-    u[0] = position.current_pos_left; // Pos left
-    u[1] = position.current_pos_right; //Pos right
+    u[0] = pos_left.current_pos; // Pos left
+    u[1] = pos_right.current_pos; //Pos right
     u[2] = ros_data.left_motor_setpoint_vel; /* SetVelLeft */
     u[3] = ros_data.right_motor_setpoint_vel; /* SetVelright */
     controller.Calculate(u, y);
-    xeno_data.current_pos_left  = position.current_pos_left;
-    xeno_data.current_pos_right = position.current_pos_right;
-    xeno_data.difference_left   = position.difference_left;
-    xeno_data.difference_right  = position.difference_right;
+    xeno_data.current_pos_left  = pos_left.current_pos;
+    xeno_data.current_pos_right = posi_right.current_pos
+    xeno_data.difference_left   = pos_left.diff;
+    xeno_data.difference_right  = pos_right.diff;
     xeno_data.left_motor_pwm    = ros_data.left_motor_setpoint_vel;
     xeno_data.right_motor_pwm   = ros_data.right_motor_setpoint_vel;
     actuate_data.pwm1 =  ros_data.left_motor_setpoint_vel;          // left motor y[0]-->/* Steer Left */

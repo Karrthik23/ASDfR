@@ -54,7 +54,7 @@ class SequenceController : public rclcpp::Node {
 
         vel_xeno.left_motor_setpoint_vel = -2047*0.15;
         vel_xeno.right_motor_setpoint_vel = 2047*0.15;
-        
+        pub_xeno_ -> publish(vel_xeno);
         std::this_thread::sleep_for(std::chrono::seconds(10));
 
         vel_xeno.left_motor_setpoint_vel =  -2047*0.15;
