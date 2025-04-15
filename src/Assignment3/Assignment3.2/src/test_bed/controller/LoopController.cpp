@@ -44,6 +44,10 @@ void LoopController::CopyVariablesToOutputs (XXDouble *y)
 
 }
 
+// Ensure signs of encoder match signs of the movement
+// Leads to infinite difference otherwise
+
+
 LoopController::LoopController(void)
 {
 	m_number_constants = 0;
