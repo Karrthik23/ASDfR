@@ -42,7 +42,7 @@ void SequenceController::sequence_controller()
   pub_xeno_->publish(vel_xeno);
 
   // Wait 10 seconds before next move
-  std::this_thread::sleep_for(std::chrono::seconds(10));
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 
   // Then: drive straight backwards
   vel_xeno.left_motor_setpoint_vel = -2047 * 0.15;
@@ -50,7 +50,7 @@ void SequenceController::sequence_controller()
   pub_xeno_->publish(vel_xeno);
 
   // Hold this movement for 2 seconds
-  std::this_thread::sleep_for(std::chrono::seconds(2));
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 void SequenceController::update_greenobject_pos(const geometry_msgs::msg::Point &msg)
