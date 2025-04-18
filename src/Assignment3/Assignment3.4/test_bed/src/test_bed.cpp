@@ -42,7 +42,14 @@ int Test_Bed::initialised()
     // Call start() or return 1 to go to run state
 
     evl_printf("Hello from initialised\n");       // Do something
-
+    actuate_data.pwm1 = 0;
+    actuate_data.pwm2 = 0;
+    u[0] =0;// Pos left
+    u[1] =0;///Pos right
+    u[2] =0;/* SetVelLeft */
+    u[3] = 0; /* SetVelright */
+    pos_left.previous_pos = sample_data.channel2;
+    pos_right.previous_pos = sample_data.channel1;
     return 1;
 }
 
@@ -53,7 +60,7 @@ int Test_Bed::run()
 
     // Start logger
     // logger.start();                             
-    monitor.printf("Hello from run\n");  
+    // monitor.printf("Hello from run\n");  
     //  Change some data for logger            
     data_to_be_logged.this_is_a_bool = !data_to_be_logged.this_is_a_bool;
     data_to_be_logged.this_is_a_int++;
@@ -79,46 +86,62 @@ int Test_Bed::run()
         pwm1 is left motor input
         pwm2 is right motor input
     */
-   
-    pos_left.diff = sample_data.channel1 - pos_left.previous_pos
+    
+    double current_tick_left = sample_data.channel2;
+    pos_left.diff = current_tick_left - pos_left.previous_pos;
    //account for overflow
     if (pos_left.diff > max_encoder_ticks/2){
-        pos_left.diff -= (max_encoder_ticks+1);
+        pos_left.diff -= max_encoder_ticks;
     }
     else if(pos_left.diff < -max_encoder_ticks/2){
-        pos_left.diff += (max_encoder_ticks+1);
+        pos_left.diff += max_encoder_ticks;
     }
-    pos_left.previous_pos = sample_data.channel1;
-    pos_right.diff = -(sample_data.channel2 - pos_right.previous_pos)
+    pos_left.previous_pos = current_tick_left;
+
+    double current_tick_right = sample_data.channel1;
+    pos_right.diff = -(current_tick_right - pos_right.previous_pos);
     if (pos_right.diff > max_encoder_ticks/2)    {
-        pos_right.difft -= (max_encoder_ticks+1);
+        pos_right.diff -= max_encoder_ticks;
     }
     else if(pos_right.diff < -max_encoder_ticks/2)    {
-        pos_right.diff += (max_encoder_ticks+1);
+        pos_right.diff += max_encoder_ticks;
     }
-    pos_right.previous_pos = sample_data.channel1;
+    pos_right.previous_pos = current_tick_right;
     // update previous ticks
     
     // Calculate displacement
-    pos_left.current_pos += pos_left.diff/(encoder_rev_count*gear_ratio)*(wheel_r*rad_full_rev_conv);
-    pos_right.current_pos += position.difference_right/(encoder_rev_count*gear_ratio)*(wheel_r*rad_full_rev_conv);
+    pos_left.current_pos += pos_left.diff/(encoder_rev_count*gear_ratio)*(rad_full_rev_conv);
+    pos_right.current_pos += pos_right.diff/(encoder_rev_count*gear_ratio)*(rad_full_rev_conv);
 
     u[0] = pos_left.current_pos; // Pos left
     u[1] = pos_right.current_pos; //Pos right
     u[2] = ros_data.left_motor_setpoint_vel; /* SetVelLeft */
     u[3] = ros_data.right_motor_setpoint_vel; /* SetVelright */
+
     controller.Calculate(u, y);
+
     xeno_data.current_pos_left  = pos_left.current_pos;
-    xeno_data.current_pos_right = posi_right.current_pos
+    xeno_data.current_pos_right = pos_right.current_pos;
     xeno_data.difference_left   = pos_left.diff;
     xeno_data.difference_right  = pos_right.diff;
-    xeno_data.left_motor_pwm    = ros_data.left_motor_setpoint_vel;
-    xeno_data.right_motor_pwm   = ros_data.right_motor_setpoint_vel;
-    actuate_data.pwm1 =  ros_data.left_motor_setpoint_vel;          // left motor y[0]-->/* Steer Left */
-    actuate_data.pwm2 =  ros_data.right_motor_setpoint_vel;          // right motor y[1]-->/* Steer right */
-    monitor.printf("Right set_vel value : %f\n",ros_data.right_motor_setpoint_vel);
-    monitor.printf("Left set_vel value : %f\n",ros_data.left_motor_setpoint_vel);
+    
 
+    output_left =  y[0];            // y[0]-->/* Steer Left, so left motor turns */
+    output_right =  y[1];           // y[1]-->/* Steer Right, so right motor turns */
+
+
+    output_right = std::clamp(output_right,-2047.0,2047.0);
+    output_left = std::clamp(output_left,-2047.0,2047.0);
+    // std::clamp(output_right,-2047,2047);
+    // right motor y[1]-->/* Steer right */
+    actuate_data.pwm1 = -output_right;
+    actuate_data.pwm2 = output_left;
+    // monitor.printf("Right steer value : %f\n",output_left);
+    // monitor.printf("Left steer value : %f\n",output_right);
+    xeno_data.left_motor_pwm    = output_left;
+    xeno_data.right_motor_pwm   = -output_right;
+    // if(controller.IsFinished())
+    //     return 1;
     return 0;
 }
 

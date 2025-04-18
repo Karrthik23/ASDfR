@@ -40,9 +40,10 @@ private:
     float gear_ratio = 15.58;
     float encoder_rev_count = 4096;
     float rad_full_rev_conv = 2*M_PI;
-    float wheel_r = 0.101;
-    float max_encoder_ticks = 16383;
+    float max_encoder_ticks = 16384;
     int print1 = 0;
+    double output_right=0;
+    double output_left=0;
     
 protected:
     //Functions

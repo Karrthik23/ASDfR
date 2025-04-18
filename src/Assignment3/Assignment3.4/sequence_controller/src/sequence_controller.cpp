@@ -37,10 +37,10 @@ void SequenceController::sequence_controller()
   auto vel_xeno = xrf2_msgs::msg::Ros2Xeno();
 
   // Simple turning behavior based on horizontal error
+        
   vel_xeno.left_motor_setpoint_vel = e;
-  vel_xeno.right_motor_setpoint_vel = -e;
-
-  pub_xeno_->publish(vel_xeno);
+  vel_xeno.right_motor_setpoint_vel = -e;             
+  pub_xeno_ -> publish(vel_xeno);
 }
 
 void SequenceController::update_greenobject_pos(const geometry_msgs::msg::Point &msg)
