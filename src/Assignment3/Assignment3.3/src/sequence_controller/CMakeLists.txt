@@ -19,7 +19,7 @@ ament_target_dependencies(sequence_controller
   std_msgs
   xrf2_msgs
 )
-
+include_directories(include)
 install(TARGETS
   sequence_controller
   DESTINATION lib/${PROJECT_NAME})

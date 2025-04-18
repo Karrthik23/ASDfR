@@ -14,5 +14,9 @@
         "/opt/ros/humble/local/lib/python3.10/dist-packages"
     ],
     "C_Cpp.errorSquiggles": "enabled",
-    "cmake.sourceDirectory": "/home/nothecats/Documents/project/ASDfR/src/Assignment1.2/relbot_setpoint_generator"
+    "cmake.sourceDirectory": "/home/nothecats/Documents/project/ASDfR/src/Assignment1.2/relbot_setpoint_generator",
+    "files.associations": {
+        "thread": "cpp",
+        "functional": "cpp"
+    }
 }

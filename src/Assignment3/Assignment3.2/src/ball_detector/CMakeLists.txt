@@ -19,7 +19,7 @@ ament_target_dependencies(${PROJECT_NAME} cv_bridge)
 install(TARGETS
   ball_detector
   DESTINATION lib/${PROJECT_NAME})
-
+include_directories(include)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
