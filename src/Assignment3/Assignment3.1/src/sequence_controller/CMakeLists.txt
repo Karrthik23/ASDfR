@@ -9,7 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
-
+include_directories(include)
 add_executable(sequence_controller src/sequence_controller.cpp)
 
 ament_target_dependencies(sequence_controller

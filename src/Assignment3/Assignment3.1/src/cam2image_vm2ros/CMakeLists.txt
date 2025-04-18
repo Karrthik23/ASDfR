@@ -44,7 +44,9 @@ install(
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 
-
+  install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}
+)
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 install(

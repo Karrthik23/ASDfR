@@ -1,90 +1,68 @@
-#include <chrono>
-#include <string>
-
-#include <geometry_msgs/msg/point.hpp>
-#include <geometry_msgs/msg/point_stamped.hpp>
-
-#include <rclcpp/rclcpp.hpp>
-
-#include <std_msgs/msg/float64.hpp>
+#include "sequence_controller.hpp"
 
 using std::placeholders::_1;
 
-using namespace std::chrono_literals;
+SequenceController::SequenceController()
+  : Node("sequence_controller"), count_(0)
+{
+  // sample time in seconds
+  sample_time_s_ = 0.03;
 
-class SequenceController : public rclcpp::Node {
-  public:
-    SequenceController() : Node("sequence_controller"), count_(0) {
-        sample_time_s_ = 0.03;
+  // subscriber to pixel coordinates of the green object
+  subscription_greenobject_pos_ = this->create_subscription<geometry_msgs::msg::Point>(
+    "pixel_coordinates", 10, std::bind(&SequenceController::update_greenobject_pos, this, _1));
 
-        subscription_greenobject_pos_ =
-            this->create_subscription<geometry_msgs::msg::Point>(
-                "pixel_coordinates", 10,
-                std::bind(&SequenceController::update_greenobject_pos, this, _1));
+  // publishers to motor velocity topics
+  publisher_left_ = this->create_publisher<std_msgs::msg::Float64>("left_motor_setpoint_vel", 10);
+  publisher_right_ = this->create_publisher<std_msgs::msg::Float64>("right_motor_setpoint_vel", 10);
 
-        publisher_left_ = this->create_publisher<std_msgs::msg::Float64>(
-            "left_motor_setpoint_vel", 10);
+  // periodic timer to trigger the control loop
+  timer_ = rclcpp::create_timer(
+    this, this->get_clock(),
+    std::chrono::duration<double>(sample_time_s_),
+    std::bind(&SequenceController::sequence_controller, this));
 
-        publisher_right_ = this->create_publisher<std_msgs::msg::Float64>(
-            "right_motor_setpoint_vel", 10);
+  // parameters for control gain and camera width
+  this->declare_parameter("gain", 0.2);
+  this->declare_parameter("width", 360);
+}
 
-        timer_ = rclcpp::create_timer(
-            this, this->get_clock(),
-            std::chrono::duration<double>(sample_time_s_),
-            std::bind(&SequenceController::sequence_controller, this));
+void SequenceController::sequence_controller()
+{
+  auto gain = this->get_parameter("gain").as_double();
+  auto width = this->get_parameter("width").as_int();
 
-        this->declare_parameter("gain", 0.2);
-        this->declare_parameter("width", 360);
-    }
+  // compute error as horizontal deviation from center
+  double e = gain * (greenobject_pos_.x - (width / 2));
 
-  private:
-    void sequence_controller() {
-        auto gain = this->get_parameter("gain").as_double();
-        auto width = this->get_parameter("width").as_int();
+  RCLCPP_INFO(this->get_logger(), "greenobject_pos.x: %f, e: %f", greenobject_pos_.x, e);
 
-        double e = gain * (greenobject_pos_.x - (width / 2));
+  // set opposite velocities for turning
+  auto vel_left = std_msgs::msg::Float64();
+  auto vel_right = std_msgs::msg::Float64();
 
-        RCLCPP_INFO(this->get_logger(), "greenobject_pos.x: %f, e: %f", greenobject_pos_.x,
-                    e);
+  vel_left.data = e;
+  vel_right.data = -e;
 
-        auto vel_left = std_msgs::msg::Float64();
-        auto vel_right = std_msgs::msg::Float64();
+  publisher_left_->publish(vel_left);
+  publisher_right_->publish(vel_right);
+}
 
-        vel_left.data = e;
-        vel_right.data = -e;
+void SequenceController::update_greenobject_pos(const geometry_msgs::msg::Point &msg)
+{
+  // ignore invalid points
+  if (msg.x == -1)
+    return;
 
-        publisher_left_->publish(vel_left);
-        publisher_right_->publish(vel_right);
-    }
+  greenobject_pos_.x = msg.x;
+  greenobject_pos_.y = msg.y;
+}
 
-    void update_greenobject_pos(const geometry_msgs::msg::Point &msg) {
-        if (msg.x == -1)
-            return;
-
-        greenobject_pos_.x = msg.x;
-        greenobject_pos_.y = msg.y;
-    }
-
-    size_t count_;
-    double sample_time_s_;
-
-    geometry_msgs::msg::Point greenobject_pos_;
-
-    rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr
-        subscription_greenobject_pos_;
-    rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr
-        subscription_dim_;
-
-    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr publisher_left_;
-    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr publisher_right_;
-
-    rclcpp::TimerBase::SharedPtr timer_;
-};
-
-int main(int argc, char *argv[]) {
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<SequenceController>());
-    rclcpp::shutdown();
-
-    return 0;
+// main function remains in .cpp
+int main(int argc, char *argv[])
+{
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<SequenceController>());
+  rclcpp::shutdown();
+  return 0;
 }

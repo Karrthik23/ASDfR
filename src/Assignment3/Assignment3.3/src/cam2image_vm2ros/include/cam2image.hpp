@@ -12,7 +12,7 @@
 #if __has_include(<cv_bridge/cv_bridge.hpp>)
     #include <cv_bridge/cv_bridge.hpp>
 #elif __has_include(<cv_bridge/cv_bridge.h>)
-    #include <cv_bridge/cv_bridge.h>
+    #include <cv_bridge/cv_bridge.hpp>
 #else
     #error "Required cv_bridge header file not found"
 #endif
